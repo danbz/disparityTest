@@ -1,5 +1,10 @@
 #pragma once
 
+// generate disparity map from left and right colour image
+// generate depth map and 3d point cloud form depth map
+// dan buzzo 2017. http://www.buzzo.com
+// http://www.github.com/danbz
+
 #include "ofMain.h"
 #include "ofxCv.h"
 #include "ofxGui.h"
@@ -25,7 +30,7 @@ class ofApp : public ofBaseApp{
     
     
     ofImage leftImage;
-    ofImage rightImage;
+    ofImage rightImage, colorImage;
     ofImage depth;
     ofShortImage disparity;
     
@@ -37,4 +42,8 @@ class ofApp : public ofBaseApp{
     //cv::StereoBM stereo;
     cv::StereoSGBM stereo;
     
+    ofEasyCam easyCam;
+    ofMesh mesh;
+    int renderStyle;
+    bool paintMesh, drawSource, blur, erode, dilate;
 };
