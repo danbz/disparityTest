@@ -29,23 +29,29 @@ class ofApp : public ofBaseApp{
 		void gotMessage(ofMessage msg);
     
     
-    ofImage leftImage;
-    ofImage rightImage, colorImage;
-    ofImage depth;
+    ofImage leftImage, rightImage, colorImage, depth, grabbedImage;
     ofShortImage disparity;
     
-    cv::Mat imgMatLeft;
-    cv::Mat imgMatRight;
-    cv::Mat imgMatDisparity;
-    cv::Mat depthMat;
+    cv::Mat imgMatLeft, imgMatRight, imgMatDisparity, depthMat;
 
-    //cv::StereoBM stereo;
+    cv::StereoBM stereoBM;
     cv::StereoSGBM stereo;
     
     cv::StereoVar stereoVar;
     
+    ofVideoGrabber vidGrabber;
+    
     ofEasyCam easyCam;
     ofMesh mesh;
     int renderStyle;
-    bool paintMesh, drawSource, blur, erode, dilate;
+    bool paintMesh, drawSource, blur, erode, dilate, showGui;
+    
+    
+   // gui setup
+    
+//        
+    ofxIntSlider minDisparity, numberOfDisparities, SADWindowSize, P1, P2, disp12MaxDiff, preFilterCap, uniquenessRatio, speckleWindowSize, speckleRange;
+    
+    ofxPanel gui;
+
 };

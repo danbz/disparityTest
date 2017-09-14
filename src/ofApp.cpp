@@ -12,12 +12,10 @@ using namespace ofxCv;
 //--------------------------------------------------------------
 void ofApp::setup(){
     
-    //3264 × 2448
-//    
     leftImage.load( "left.png");
     rightImage.load( "right.png");
     colorImage.load( "left.png");
-//    
+//
 //       leftImage.load( "cloud left sml.png");
 //        rightImage.load( "cloud right sml.png");
 //        colorImage.load( "cloud left sml.png");
@@ -28,11 +26,11 @@ void ofApp::setup(){
 //
     leftImage.setImageType(OF_IMAGE_GRAYSCALE);
     rightImage.setImageType(OF_IMAGE_GRAYSCALE);
-    disparity.allocate(leftImage.getWidth(), leftImage.getHeight(), OF_IMAGE_GRAYSCALE);
+    //disparity.allocate(leftImage.getWidth(), leftImage.getHeight(), OF_IMAGE_GRAYSCALE);
 
-    imgMatLeft = toCv(leftImage);
-    imgMatRight = toCv(rightImage);
-    imitate(imgMatDisparity, imgMatLeft);
+//    imgMatLeft = toCv(leftImage);
+//    imgMatRight = toCv(rightImage);
+//    imitate(imgMatDisparity, imgMatLeft);
     
     
     paintMesh = true;
@@ -41,16 +39,58 @@ void ofApp::setup(){
     blur=false;
     erode = false;
     dilate = false;
+    vidGrabber.listDevices();
+    vidGrabber.setDeviceID(1);
+    vidGrabber.initGrabber(1344 , 376);
     
     
-    //disparity filter
+    // gui setup
+    
+    gui.setup(); // most of the time you don't need a name
+    gui.add(minDisparity.setup("minDisparity", 0, 0, 10));
+    gui.add(numberOfDisparities.setup("numberOfDisparities", 32, 4, 128));
+    gui.add(SADWindowSize.setup("SADWindowSize", 3, 1, 9));
+    gui.add(P1.setup("P1", 128, 0, 256));
+    gui.add(P2.setup("P2", 256, 16, 266));
+    gui.add(disp12MaxDiff.setup("disp12MaxDiff", 20, 1, 80));
+    gui.add(preFilterCap.setup("preFilterCap", 4, 0, 10));
+    gui.add(uniquenessRatio.setup("uniquenessRatio", 2, 0, 10));
+      gui.add(speckleWindowSize.setup("speckleWindowSize", 100, 0, 400));
+      gui.add(speckleRange.setup("speckleRange", 5, 1, 9));
+    
+  
     
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
     
-    //stereo.operator()(imgMatLeft, imgMatRight, imgMatDisparity, CV_16S);
+    vidGrabber.update();
+    if(vidGrabber.isFrameNew()){
+        grabbedImage = vidGrabber.getPixels();
+
+        leftImage.cropFrom(grabbedImage, 0, 0, grabbedImage.getWidth()/2, grabbedImage.getHeight());
+        rightImage.cropFrom(grabbedImage, grabbedImage.getWidth()/2 , 0, grabbedImage.getWidth()/2 , grabbedImage.getHeight());
+        colorImage.cropFrom(grabbedImage, 0, 0, grabbedImage.getWidth()/2, grabbedImage.getHeight());
+    }
+    
+   // leftImage.setImageType(OF_IMAGE_GRAYSCALE);
+    //rightImage.setImageType(OF_IMAGE_GRAYSCALE);
+    disparity.allocate(leftImage.getWidth(), leftImage.getHeight(), OF_IMAGE_GRAYSCALE);
+    
+    imgMatLeft = toCv(leftImage);
+    imgMatRight = toCv(rightImage);
+    imitate(imgMatDisparity, imgMatLeft);
+    
+    //- Call the constructor for StereoBM
+    //int ndisparities = 16*5;   /**< Range of disparity */
+    //int SADWindowSize = 21; /**< Size of the block window. Must be odd */
+    
+    //stereoBM(ndisparities, SADWindowSize);
+   
+    
+    //stereoBM.operator()(imgMatLeft, imgMatRight, imgMatDisparity, CV_16S);
+    
 //    stereo.minDisparity=0;
 //    stereo.numberOfDisparities =32;
 //    stereo.SADWindowSize=3;
@@ -62,26 +102,39 @@ void ofApp::update(){
 //    stereo.speckleWindowSize=100;
 //    stereo.speckleRange = 20;
 //    stereo.fullDP=true;
+//    
+//    stereo.minDisparity=0;
+//    stereo.numberOfDisparities =32;
+//    stereo.SADWindowSize=3;
+//    stereo.P1 =32;
+//    stereo.P2 = 256;
+//    stereo.disp12MaxDiff = 20;
+//    stereo.preFilterCap=4;
+//    stereo.uniquenessRatio=2  ;
+//    stereo.speckleWindowSize=100;
+//    stereo.speckleRange = 5;
+//    stereo.fullDP=true;
     
-    stereo.minDisparity=0;
-    stereo.numberOfDisparities =32;
-    stereo.SADWindowSize=3;
-    stereo.P1 =32;
-    stereo.P2 = 256;
-    stereo.disp12MaxDiff = 20;
-    stereo.preFilterCap=4;
-    stereo.uniquenessRatio=2  ;
-    stereo.speckleWindowSize=100;
-    stereo.speckleRange = 5;
-    stereo.fullDP=true;
+    stereo.minDisparity= minDisparity;
+        stereo.numberOfDisparities =numberOfDisparities;
+        stereo.SADWindowSize=SADWindowSize;
+        stereo.P1 =P1;
+        stereo.P2 = P2;
+        stereo.disp12MaxDiff = disp12MaxDiff;
+        stereo.preFilterCap=preFilterCap;
+        stereo.uniquenessRatio=uniquenessRatio  ;
+        stereo.speckleWindowSize=speckleWindowSize;
+        stereo.speckleRange = speckleRange;
+        stereo.fullDP=true;
+
 
     //StereoVar(USE_AUTO_PARAMS=true);
-    StereoVar();
+   // StereoVar();
   //  StereoVar(<#int levels#>, <#double pyrScale#>, <#int nIt#>, <#int minDisp#>, <#int maxDisp#>, <#int poly_n#>, <#double poly_sigma#>, <#float fi#>, <#float lambda#>, <#int penalization#>, <#int cycle#>, <#int flags#>);
     
-    StereoVar(1, 0.5, 1, 0, 32, 5, 1.1, 1.0, 1.0, 1, 0, 4);
+    //StereoVar(1, 0.5, 1, 0, 32, 5, 1.1, 1.0, 1.0, 1, 0, 4);
     
-    //stereo(0, 32, 3, 128, 256, 20, 16, 1, 100, 20, true);
+    //stereo(0, 32, 3, 128, 256, 20, 16, 1, 100, 20, true); example SGBM settings
     stereo.operator()(imgMatLeft, imgMatRight, imgMatDisparity);
     //stereoVar.operator()( imgMatLeft, imgMatRight, imgMatDisparity);
 
@@ -95,10 +148,11 @@ void ofApp::update(){
     
     
     ofShortColor c;
+  
     for(int y = 0; y < leftImage.getHeight(); y ++) {
         for(int x = 0; x < leftImage.getWidth(); x ++) {
             c =  disparity.getColor(x, y);
-            depth.setColor(x, y, CLAMP(c.r, 0, 255));
+           depth.setColor(x, y, CLAMP(c.r/2.0, 0, 255));
         }
     }
     
@@ -172,9 +226,12 @@ void ofApp::draw(){
     
     if (drawSource){
         leftImage.draw(10, 10);
-        rightImage.draw(400, 10);
-        disparity.draw(10, 310);
-        depth.draw(400,310);
+        rightImage.draw(20+(grabbedImage.getWidth()/2), 10);
+        
+        disparity.draw(10, 20 + (grabbedImage.getHeight()));
+        depth.draw(20+(grabbedImage.getWidth()/2), 20 + (grabbedImage.getHeight()));
+       // grabbedImage.draw(50,50);
+        
     } else {
         //cout << ofGetFrameRate() << endl;\\\
         
@@ -208,6 +265,10 @@ void ofApp::draw(){
         ofPopMatrix();
         easyCam.end();
         
+    }
+    
+    if(showGui){
+        gui.draw();
     }
     
 }
@@ -265,6 +326,12 @@ void ofApp::keyPressed(int key){
         case 'D':
             dilate=!dilate;
             break;
+            
+        case 'g':
+        case 'G':
+            showGui=!showGui;
+            break;
+            
             
             
             
