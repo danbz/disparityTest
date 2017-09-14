@@ -13,16 +13,22 @@ using namespace ofxCv;
 void ofApp::setup(){
     
     //3264 × 2448
-    
+//    
     leftImage.load( "left.png");
     rightImage.load( "right.png");
     colorImage.load( "left.png");
-    
+//    
+//       leftImage.load( "cloud left sml.png");
+//        rightImage.load( "cloud right sml.png");
+//        colorImage.load( "cloud left sml.png");
+//
+//    leftImage.load( "ambush_5_left.jpg");
+//    rightImage.load( "ambush_5_right.jpg");
+//    colorImage.load( "ambush_5_left.jpg");
+//
     leftImage.setImageType(OF_IMAGE_GRAYSCALE);
     rightImage.setImageType(OF_IMAGE_GRAYSCALE);
-    
-    disparity.allocate(384, 288, OF_IMAGE_GRAYSCALE);
-    //disparity.allocate(1024, 436, OF_IMAGE_GRAYSCALE);
+    disparity.allocate(leftImage.getWidth(), leftImage.getHeight(), OF_IMAGE_GRAYSCALE);
 
     imgMatLeft = toCv(leftImage);
     imgMatRight = toCv(rightImage);
@@ -45,33 +51,52 @@ void ofApp::setup(){
 void ofApp::update(){
     
     //stereo.operator()(imgMatLeft, imgMatRight, imgMatDisparity, CV_16S);
+//    stereo.minDisparity=0;
+//    stereo.numberOfDisparities =32;
+//    stereo.SADWindowSize=3;
+//    stereo.P1 =128;
+//    stereo.P2 = 256;
+//    stereo.disp12MaxDiff = 20;
+//    stereo.preFilterCap=16;
+//    stereo.uniquenessRatio=1  ;
+//    stereo.speckleWindowSize=100;
+//    stereo.speckleRange = 20;
+//    stereo.fullDP=true;
+    
     stereo.minDisparity=0;
     stereo.numberOfDisparities =32;
     stereo.SADWindowSize=3;
-    stereo.P1 =128;
+    stereo.P1 =32;
     stereo.P2 = 256;
     stereo.disp12MaxDiff = 20;
-    stereo.preFilterCap=16;
-    stereo.uniquenessRatio=1  ;
+    stereo.preFilterCap=4;
+    stereo.uniquenessRatio=2  ;
     stereo.speckleWindowSize=100;
-    stereo.speckleRange = 20;
+    stereo.speckleRange = 5;
     stereo.fullDP=true;
+
+    //StereoVar(USE_AUTO_PARAMS=true);
+    StereoVar();
+  //  StereoVar(<#int levels#>, <#double pyrScale#>, <#int nIt#>, <#int minDisp#>, <#int maxDisp#>, <#int poly_n#>, <#double poly_sigma#>, <#float fi#>, <#float lambda#>, <#int penalization#>, <#int cycle#>, <#int flags#>);
+    
+    StereoVar(1, 0.5, 1, 0, 32, 5, 1.1, 1.0, 1.0, 1, 0, 4);
     
     //stereo(0, 32, 3, 128, 256, 20, 16, 1, 100, 20, true);
     stereo.operator()(imgMatLeft, imgMatRight, imgMatDisparity);
+    //stereoVar.operator()( imgMatLeft, imgMatRight, imgMatDisparity);
 
     imitate(depthMat, imgMatLeft);
     toOf(imgMatDisparity, disparity);
     
     disparity.update();
     imgMatDisparity.convertTo(depthMat, depthMat.type());
-    depth.allocate(384, 288, OF_IMAGE_GRAYSCALE);
+    depth.allocate(leftImage.getWidth(), leftImage.getHeight(), OF_IMAGE_GRAYSCALE);
     toOf(depthMat, depth);
     
     
     ofShortColor c;
-    for(int y = 0; y < 288; y ++) {
-        for(int x = 0; x < 384; x ++) {
+    for(int y = 0; y < leftImage.getHeight(); y ++) {
+        for(int x = 0; x < leftImage.getWidth(); x ++) {
             c =  disparity.getColor(x, y);
             depth.setColor(x, y, CLAMP(c.r, 0, 255));
         }
@@ -82,7 +107,9 @@ void ofApp::update(){
     // filter depth image
     
     if (blur){
-        ofxCv::GaussianBlur(depth, 5);
+        //ofxCv::GaussianBlur(depth, 10);
+        ofxCv::medianBlur(depth, depth, 10);
+
     }
     if (erode){
         ofxCv::erode(depth, depth, 2);
@@ -115,7 +142,7 @@ void ofApp::update(){
             }
            
             // v3.set((x - (width)*0.002)  ,(y -(height)*0.002) , 255-z*1.0 );
-            v3.set(x   , y  , z*2.5     );
+            v3.set(x   , y  , z*1.5     );
             mesh.addVertex(v3);
             mesh.addColor(col);
         }

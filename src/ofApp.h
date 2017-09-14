@@ -42,6 +42,8 @@ class ofApp : public ofBaseApp{
     //cv::StereoBM stereo;
     cv::StereoSGBM stereo;
     
+    cv::StereoVar stereoVar;
+    
     ofEasyCam easyCam;
     ofMesh mesh;
     int renderStyle;
