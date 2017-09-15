@@ -44,7 +44,7 @@ class ofApp : public ofBaseApp{
     ofEasyCam easyCam;
     ofMesh mesh;
     int renderStyle;
-    bool paintMesh, drawSource, blur, erode, dilate, showGui;
+    bool paintMesh, drawSource, blur, erode, dilate, showGui, s;
     
     
    // gui setup
